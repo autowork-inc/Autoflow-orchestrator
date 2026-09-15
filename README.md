@@ -1,11 +1,15 @@
 # Headless Automation Suite
 
-This is a concurrent browser automation orchestrator I built using Python and Playwright. The main goal was to create a scalable system that can manage multiple isolated browser contexts without triggering anti-bot protections during automated QA and synthetic load testing. Because of NDA constraints and proprietary API integrations, the actual source code is kept private, but this document explains how the engine works under the hood.
+This is a concurrent RPA orchestrator I built with Python and Playwright. I designed it to automate complex, multi-step workflows across legacy web applications that don't offer native APIs. Due to NDA, the source code is private, but here is a quick breakdown of the architecture.
 
-The system runs on a classic producer-consumer architecture using Python's ThreadPoolExecutor and queues. I wrote a background daemon that constantly communicates with external APIs to fetch virtual resources. At the same time, a pool of worker threads picks up these tasks, spins up isolated Custom Chromium environments via CDP, and executes the actual Playwright scripts. I didn't want to run everything from the terminal, so I wrapped the whole thing in an asynchronous desktop GUI using Flet. It lets me monitor active threads, check API balances, and stream logs without blocking the main event loop.
+The engine runs on a producer-consumer model. A background dispatcher queues up workloads, like data synchronization tasks, and a pool of worker threads processes them in parallel using isolated Playwright contexts. Instead of running it blindly from the terminal, I built an asynchronous desktop dashboard using Flet to monitor thread health, task progress, and live logs.
 
-One of the biggest challenges was bypassing fingerprint detection and handling flaky UIs. Normal Playwright clicks get flagged pretty fast by modern WAFs, so I implemented native touch emulations with randomized delays to mimic real user behavior. Every time a worker starts, it requests a fresh browser profile with spoofed WebGL and WebRTC fingerprints and routes the traffic through dynamically rotating proxies. If a page hangs or a DOM element doesn't load, the script triggers a fail-fast routine: it takes a screenshot, dumps the HTML for debugging, and gracefully kills the node before retrying with a new IP.
+Here are the main technical problems I solved:
 
-I also added a module to automatically secure the provisioned environments. The script parses the DOM or clipboard to extract secret keys and generates TOTP codes on the fly using pyotp to set up two-factor authentication. Finally, all the output data from the concurrent threads is safely aggregated into a local Excel file using a custom thread-locked writer to prevent file corruption during parallel execution.
+**Handling Flaky UIs:** The target applications were often slow and unpredictable. Standard automation clicks would randomly fail. I implemented a resilient state-machine with native event emulation. If a page hangs or an element is missing, the worker triggers a fail-fast routine, saves a full-page screenshot and HTML dump for debugging, and gracefully requeues the task.
 
-**Tech Stack:** Python 3.10+, Playwright, CDP Orchestration, Flet, PyOTP, openpyxl.
+**Automated MFA Login:** The worker nodes needed to authenticate into portals secured by multi-factor authentication. I integrated pyotp to automatically handle TOTP challenges for our automated service accounts on the fly.
+
+**Thread-Safe Data Aggregation:** Since multiple threads process data at the same time, I wrote a custom, lock-based Excel writer using openpyxl to safely compile the final reports without corrupting the files during parallel execution.
+
+**Tech Stack:** Python 3.10+, Playwright, Flet, PyOTP, openpyxl, concurrent.futures.
