@@ -8,4 +8,3 @@ The engine runs on a producer-consumer model. A background dispatcher queues up 
 
 **Thread-Safe Data Aggregation:** Since multiple threads process data at the same time, I wrote a custom, lock-based Excel writer using openpyxl to safely compile the final reports without corrupting the files during parallel execution.
 
-**Tech Stack:** Python 3.10+, Playwright, Flet, PyOTP, openpyxl, concurrent.futures.
