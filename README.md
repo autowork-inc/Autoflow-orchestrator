@@ -8,4 +8,4 @@ One of the biggest challenges was bypassing fingerprint detection and handling f
 
 I also added a module to automatically secure the provisioned environments. The script parses the DOM or clipboard to extract secret keys and generates TOTP codes on the fly using pyotp to set up two-factor authentication. Finally, all the output data from the concurrent threads is safely aggregated into a local Excel file using a custom thread-locked writer to prevent file corruption during parallel execution.
 
-## Tech Stack: ## Python 3.10+, Playwright (Sync API), CDP Orchestration, Flet, PyOTP, openpyxl.
+**Tech Stack:** Python 3.10+, Playwright (Sync API), CDP Orchestration, Flet, PyOTP, openpyxl.
